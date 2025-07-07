@@ -15,13 +15,23 @@ import {
 } from './pages/index.js'
 import CreateChatPage from './pages/CreateChatPage.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
+import PublicRoute from './components/PublicRoute.jsx'
+
+import AuthChecker from './components/AuthChecker.js'
 
 const router = createBrowserRouter([
   {
     path: '/',
     element: <HomeLayout />,
     children: [
-      { index: true, Component: HomePage },
+      {
+        index: true,
+        element: (
+          <PublicRoute>
+            <HomePage />
+          </PublicRoute>
+        ),
+      },
       { path: 'email-sign-in', Component: EmailSignIn },
       { path: 'email-register', Component: EmailRegister },
     ],
@@ -43,7 +53,9 @@ const router = createBrowserRouter([
 
 createRoot(document.getElementById('root')).render(
   <Provider store={store}>
+    {/* <AuthChecker> */}
     <RouterProvider router={router} />
+    {/* </AuthChecker> */}
   </Provider>
 )
 

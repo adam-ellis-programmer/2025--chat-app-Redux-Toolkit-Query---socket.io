@@ -1,11 +1,12 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
+import { useGetCurrentUserQuery } from '../store/authApiSlice.js'
 import FormTextInput from '../components/inputs/FormTextInput'
 
 const elements = [
   {
     id: 1,
     type: 'text',
-    name: 'userName',
+    name: 'username',
     placeholder: 'Enter User Name',
     defaultValue: 'test-user-123',
   },
@@ -13,7 +14,7 @@ const elements = [
     id: 2,
     type: 'text',
     name: 'firstName',
-    placeholder: 'Test',
+    placeholder: 'Enter First Name',
   },
   {
     id: 3,
@@ -31,7 +32,7 @@ const elements = [
   },
   {
     id: 5,
-    type: 'text',
+    type: 'password',
     name: 'password',
     placeholder: 'Enter Password',
     defaultValue: '111111',
@@ -51,7 +52,75 @@ const elements = [
     defaultValue: false,
   },
 ]
+
 const UserDash = () => {
+  // Fetch current user data
+  const { data, error, isLoading } = useGetCurrentUserQuery()
+  // console.log(data)
+
+  // Initialize form data from elements default values
+  const initialFormData = elements.reduce((acc, field) => {
+    if (field.type !== 'checkbox') {
+      acc[field.name] = field.defaultValue || ''
+    } else {
+      acc[field.name] = field.defaultValue || false
+    }
+    return acc
+  }, {})
+
+  const [formData, setFormData] = useState(initialFormData)
+
+  // Update form data when user data is fetched
+  useEffect(() => {
+    if (data?.user) {
+      const user = data.user
+      setFormData({
+        username: user.username || '',
+        firstName: user.profile?.firstName || 'not set',
+        lastName: user.profile?.lastName || '',
+        email: user.email || '',
+        password: '', // Don't populate password field
+        isVerified: user.isVerified || false,
+        isOnline: user.isOnline || false, // You might need to add this to your user model
+      })
+    }
+  }, [data])
+
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target
+    setFormData({
+      ...formData,
+      [name]: type === 'checkbox' ? checked : value,
+    })
+  }
+
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    console.log('Form data to update:', formData)
+    // TODO: Add update user mutation here later
+  }
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className='flex justify-center items-center min-h-screen'>
+        <span className='loading loading-spinner loading-lg text-white'></span>
+      </div>
+    )
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className='flex justify-center items-center min-h-screen'>
+        <div className='bg-red-500 text-white p-4 rounded'>
+          Error loading user data:{' '}
+          {error?.data?.message || 'Something went wrong'}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div>
       <section className='py-10'>
@@ -63,53 +132,79 @@ const UserDash = () => {
           <div>
             <p className='text-2xl text-white text-center mb-3'>User Info</p>
             <div className='max-w-[700px] mx-auto'>
-              <form action='' className=''>
-                <div className='grid grid-cols-2 gap-5 '>
-                  {/*TEXT */}
+              <form onSubmit={handleSubmit} className=''>
+                <div className='grid grid-cols-2 gap-5'>
+                  {/* TEXT FIELDS */}
                   {elements
-                    .filter((item) => item.type === 'text')
+                    .filter(
+                      (item) => item.type === 'text' || item.type === 'password'
+                    )
                     .map((item, i) => {
                       return (
-                        <FormTextInput
-                          key={i}
-                          type={item.type}
-                          placeholder={item.placeholder}
-                          className={`input w-full mb-2`}
-                          defaultValue={item.defaultValue}
-                        />
+                        <div key={item.id}>
+                          <label className='block text-white text-sm mb-1'>
+                            {item.placeholder}
+                          </label>
+                          <FormTextInput
+                            key={item.id}
+                            name={item.name}
+                            type={item.type}
+                            value={formData[item.name] || ''}
+                            placeholder={item.placeholder}
+                            className='input w-full mb-2'
+                            onChange={handleChange}
+                          />
+                        </div>
                       )
                     })}
                 </div>
-                {/*BOOLEANS */}
-                <div className='flex gap-5'>
+
+                {/* CHECKBOXES */}
+                <div className='flex gap-5 my-4'>
                   {elements
                     .filter((item) => item.type === 'checkbox')
                     .map((item, i) => {
                       return (
-                        <label key={i} htmlFor={item.name}>
-                          <p className='text-white'> {item.text}</p>
+                        <label
+                          key={item.id}
+                          htmlFor={item.name}
+                          className='flex items-center gap-2'
+                        >
                           <input
                             id={item.name}
                             name={item.name}
                             type='checkbox'
-                            defaultChecked={item.defaultValue}
+                            checked={formData[item.name] || false}
+                            onChange={handleChange}
                             className='checkbox checkbox-secondary'
                           />
+                          <span className='text-white'>{item.text}</span>
                         </label>
                       )
                     })}
                 </div>
 
                 <div className='flex justify-end'>
-                  <button className='bg-rose-500 text-white text-2xl p-2 rounded'>
-                    update
+                  <button
+                    type='submit'
+                    className='bg-rose-500 text-white text-2xl p-2 rounded hover:bg-rose-600 transition-colors'
+                  >
+                    Update
                   </button>
                 </div>
               </form>
             </div>
           </div>
 
-          <div></div>
+          <div>
+            {/* Debug info - remove this later */}
+            {/* <div className='max-w-[400px] mx-auto'>
+              <p className='text-white text-xl mb-3'>Debug Info</p>
+              <pre className='text-green-400 text-sm bg-gray-800 p-3 rounded overflow-auto max-h-96'>
+                {JSON.stringify(data?.user, null, 2)}
+              </pre>
+            </div> */}
+          </div>
         </div>
       </section>
     </div>

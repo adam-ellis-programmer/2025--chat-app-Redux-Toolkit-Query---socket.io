@@ -1,3 +1,5 @@
+import passport from 'passport'
+import { googleCallback } from '../controllers/authController.js'
 import express from 'express'
 import {
   register,
@@ -16,6 +18,8 @@ import {
   validatePasswordReset,
   validateEmail,
 } from '../middleware/validation.js'
+
+import { authenticateToken } from '../middleware/authMiddleware.js'
 
 const router = express.Router()
 
@@ -37,7 +41,7 @@ router.post('/login', validateLogin, login)
 // @route   GET /api/auth/me
 // @desc    Get current user
 // @access  Private (will add auth middleware later)
-router.get('/me', getCurrentUser)
+router.get('/me', authenticateToken, getCurrentUser)
 
 // @route   POST /api/auth/forgot-password
 // @desc    Request password reset
@@ -62,4 +66,26 @@ router.post('/resend-verification', validateEmail, resendVerificationEmail)
 // @desc    Logout user
 // @access  Public
 router.post('/logout', logout)
+
+// google auth routes
+
+// @route   GET /api/auth/google
+// @desc    Initiate Google OAuth
+// @access  Public
+router.get(
+  '/google',
+  passport.authenticate('google', {
+    scope: ['profile', 'email'],
+  })
+)
+
+// @route   GET /api/auth/google/callback
+// @desc    Google OAuth callback
+// @access  Public
+router.get(
+  '/google/callback',
+  passport.authenticate('google', { session: false }),
+  googleCallback
+)
+
 export default router

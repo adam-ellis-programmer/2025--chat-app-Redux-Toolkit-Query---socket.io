@@ -8,6 +8,7 @@ import { generateToken } from '../utils/jwt.js'
 // Set JWT cookie
 const setTokenCookie = (res, token) => {
   const isProduction = process.env.NODE_ENV === 'production'
+
   res.cookie('token', token, {
     httpOnly: true, // Prevents XSS attacks
     secure: isProduction, // HTTPS only in production
@@ -243,6 +244,8 @@ export const logout = async (req, res) => {
 export const getCurrentUser = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('-password')
+    // console.log('USER----->', user)
+
     res.json({
       success: true,
       user,
@@ -394,5 +397,36 @@ export const resendVerificationEmail = async (req, res) => {
       success: false,
       message: 'Server error',
     })
+  }
+}
+
+
+// Add these functions to your existing server/controllers/authController.js
+
+// @desc    Google OAuth callback - handle successful authentication
+// @route   GET /api/auth/google/callback  
+// @access  Public
+export const googleCallback = async (req, res) => {
+  try {
+    // req.user will be populated by Passport middleware
+    if (!req.user) {
+      return res.redirect(`${process.env.CLIENT_URL}/email-sign-in?error=auth_failed`)
+    }
+
+    // Update last login
+    await req.user.updateLastLogin()
+
+    // Generate JWT token
+    const token = generateToken(req.user._id)
+
+    // Set JWT in cookie (using your existing function)
+    setTokenCookie(res, token)
+
+    // Redirect to frontend dashboard
+    res.redirect(`${process.env.CLIENT_URL}/chat/user`)
+    
+  } catch (error) {
+    console.error('Google callback error:', error)
+    res.redirect(`${process.env.CLIENT_URL}/email-sign-in?error=server_error`)
   }
 }

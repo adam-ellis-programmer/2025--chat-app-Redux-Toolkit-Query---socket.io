@@ -1,8 +1,16 @@
 import React from 'react'
 
 const GoogleSignIn = () => {
+  const handleGoogleSignIn = () => {
+    // Redirect to Google OAuth endpoint on your server
+    window.location.href = 'http://localhost:5001/api/auth/google'
+  }
+
   return (
-    <button className='btn bg-white text-[1.2rem] text-black border-[#e5e5e5] w-full mb-4'>
+    <button
+      onClick={handleGoogleSignIn}
+      className='btn bg-white text-[1.2rem] text-black border-[#e5e5e5] w-full mb-4 hover:bg-gray-50 transition-colors'
+    >
       <svg
         aria-label='Google logo'
         width='26'
@@ -14,7 +22,7 @@ const GoogleSignIn = () => {
           <path d='m0 0H512V512H0' fill='#fff'></path>
           <path
             fill='#34a853'
-            d='M153 292c30 82 118 95 171 60h62v48A192 192 0 0190 341'
+            d='M153 292c30 82 118 95 171 60h62v48A192 192 0 0090 341'
           ></path>
           <path
             fill='#4285f4'

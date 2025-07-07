@@ -1,18 +1,35 @@
 import express from 'express'
-import cors from 'cors'
-import cookieParser from 'cookie-parser'
 import dotenv from 'dotenv'
-import connectDB from './config/db.js'  // ADD THIS LINE
-import { notFound, errorHandler } from './middleware/errorMiddleware.js'
-import authRoutes from './routes/auth.js'
-// Load environment variables
 dotenv.config()
 
-// Connect to database 
+import cors from 'cors'
+import cookieParser from 'cookie-parser'
+import connectDB from './config/db.js'
+import { notFound, errorHandler } from './middleware/errorMiddleware.js'
+import authRoutes from './routes/auth.js'
+
+import passport from 'passport'
+import { configurePassport } from './config/passport.js'
+
+// Connect to database
 connectDB()
 
+console.log('🔍 Environment variables check:')
+console.log(
+  'GOOGLE_CLIENT_ID:',
+  process.env.GOOGLE_CLIENT_ID ? 'EXISTS' : 'MISSING'
+)
+console.log(
+  'GOOGLE_CLIENT_SECRET:',
+  process.env.GOOGLE_CLIENT_SECRET ? 'EXISTS' : 'MISSING'
+)
+console.log('---')
+
+// Configure Passport after environment is loaded
+configurePassport()
+
 const app = express()
- 
+
 // Middleware
 app.use(express.json())
 app.use(cookieParser())
@@ -22,27 +39,23 @@ app.use(
     credentials: true,
   })
 )
+app.use(passport.initialize())
 
 app.use('/api/auth', authRoutes)
 
 // Basic route
 app.get('/api/health', (req, res) => {
   res.json({
-    message: 'Server is running!', 
+    message: 'Server is running!',
     environment: process.env.NODE_ENV || 'development',
     appName: process.env.APP_NAME || 'ChatApp',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
+    googleConfigured: !!process.env.GOOGLE_CLIENT_ID,
   })
 })
 
 app.use(notFound)
-
-// Global error handling middleware (must be last)
-// Purpose: Catches all errors that occur anywhere in your app
-// When it runs: When ANY middleware calls next(error)
-// express now knows about the middleware
-// REGISTER MIDDLEWARE --- without this Express uses its default HTML error handler instead of your JSON handler.
 app.use(errorHandler)
 
 const PORT = process.env.PORT || 5001

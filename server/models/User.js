@@ -24,10 +24,18 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       match: [/^\S+@\S+\.\S+$/, 'Please provide a valid email address'],
     },
+
+    googleId: {
+      type: String,
+      sparse: true, // Allows multiple null values
+    },
+
+    // Make password optional for Google-only users
     password: {
       type: String,
-      required: [true, 'Password is required'],
-      minlength: [6, 'Password must be at least 6 characters'],
+      required: function () {
+        return !this.googleId // Password required only if no Google ID
+      },
     },
     isVerified: {
       type: Boolean,
@@ -200,4 +208,3 @@ userSchema.statics.findByResetToken = function (token) {
 // userSchema.index({ resetPasswordToken: 1 })
 
 export default mongoose.model('User', userSchema)
-  
