@@ -18,6 +18,7 @@ import ProtectedRoute from './components/ProtectedRoute.jsx'
 import PublicRoute from './components/PublicRoute.jsx'
 
 import AuthChecker from './components/AuthChecker.js'
+import AuthChecker2 from './components/AuthChecker2.js'
 
 const router = createBrowserRouter([
   {
@@ -53,9 +54,10 @@ const router = createBrowserRouter([
 
 createRoot(document.getElementById('root')).render(
   <Provider store={store}>
-    {/* <AuthChecker> */}
-    <RouterProvider router={router} />
-    {/* </AuthChecker> */}
+    {/* auth checker needs to run when google navgates back to our app to perform check */}
+    <AuthChecker2>
+      <RouterProvider router={router} />
+    </AuthChecker2>
   </Provider>
 )
 

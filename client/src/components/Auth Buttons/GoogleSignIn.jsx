@@ -6,7 +6,7 @@ const GoogleSignIn = () => {
     window.location.href = 'http://localhost:5001/api/auth/google'
   }
 
-  return (
+  return ( 
     <button
       onClick={handleGoogleSignIn}
       className='btn bg-white text-[1.2rem] text-black border-[#e5e5e5] w-full mb-4 hover:bg-gray-50 transition-colors'

@@ -2,12 +2,12 @@ import { createSlice } from '@reduxjs/toolkit'
 
 // Check localStorage for existing user info
 const initialState = {
-  // // find string and parse to js object
   userInfo: localStorage.getItem('userInfo')
     ? JSON.parse(localStorage.getItem('userInfo'))
     : null,
-  // use cookies instead of local storage
   isAuthenticated: localStorage.getItem('userInfo') ? true : false,
+  // Add loading state to track if auth check is complete
+  isAuthLoading: !localStorage.getItem('userInfo'), // Only loading if no user in localStorage
   testState: true,
 }
 
@@ -15,21 +15,30 @@ const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
+    // Set auth loading state -- not in use
+    // setAuthLoading: (state, action) => {
+    //   state.isAuthLoading = action.payload
+    // },
+
     // Set user credentials and save to localStorage
     setCredentials: (state, action) => {
-      // Redux state = Fast access while using the app
-      // localStorage = Survives page refreshes
       state.userInfo = action.payload
       state.isAuthenticated = true
+      state.isAuthLoading = false // Auth check complete --- turn auth loading off!
       localStorage.setItem('userInfo', JSON.stringify(action.payload))
+    },
+
+    // Auth check completed but no user found
+    setAuthCheckComplete: (state) => {
+      state.isAuthLoading = false
     },
 
     // Clear user credentials and localStorage
     logout: (state) => {
       state.userInfo = null
       state.isAuthenticated = false
+      state.isAuthLoading = false
       localStorage.removeItem('userInfo')
-      // Don't clear everything - just user info
     },
 
     // Update user profile
@@ -40,13 +49,12 @@ const authSlice = createSlice({
   },
 })
 
-export const { setCredentials, logout, updateProfile } = authSlice.actions
-export default authSlice.reducer
+export const {
+  setCredentials,
+  // setAuthLoading, not using
+  setAuthCheckComplete,
+  logout,
+  updateProfile,
+} = authSlice.actions
 
-/*
-EXPLANATION:
-- Manages CLIENT-SIDE auth state only
-- Persists user info in localStorage
-- No API calls here - pure client state
-- Survives page refreshes
-*/
+export default authSlice.reducer

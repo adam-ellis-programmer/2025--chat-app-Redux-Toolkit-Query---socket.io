@@ -411,7 +411,7 @@ export const googleCallback = async (req, res) => {
     // req.user will be populated by Passport middleware
     if (!req.user) {
       return res.redirect(`${process.env.CLIENT_URL}/email-sign-in?error=auth_failed`)
-    }
+    } 
 
     // Update last login
     await req.user.updateLastLogin()
