@@ -57,6 +57,53 @@ const ChatPage = () => {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
   }
 
+  // Render different message types
+  const renderMessage = (msg) => {
+    // System messages (join/leave notifications)
+    if (msg.isSystemMessage) {
+      return (
+        <div key={msg.id} className='flex justify-center my-2'>
+          <div className='bg-gray-100 text-gray-600 text-sm px-4 py-2 rounded-full border'>
+            <span className='flex items-center'>
+              {msg.text.includes('joined') && '👋 '}
+              {msg.text.includes('left') && '👋 '}
+              {msg.text.includes('disconnected') && '📴 '}
+              {msg.text.includes('created') && '🎉 '}
+              {msg.text}
+            </span>
+            <span className='text-xs opacity-75 ml-2'>
+              {formatTime(msg.timestamp)}
+            </span>
+          </div>
+        </div>
+      )
+    }
+
+    // Regular user messages
+    return (
+      <div
+        key={msg.id}
+        className={`flex ${
+          msg.userId === user?.id ? 'justify-end' : 'justify-start'
+        }`}
+      >
+        <div
+          className={`max-w-[70%] rounded-lg p-3 ${
+            msg.userId === user?.id
+              ? 'bg-rose-500 text-white'
+              : 'bg-gray-200 text-gray-800'
+          }`}
+        >
+          <p className='text-sm opacity-75 mb-1'>
+            {msg.userId === user?.id ? 'You' : msg.userName}
+          </p>
+          <p className='break-words'>{msg.text}</p>
+          <p className='text-xs opacity-75 mt-1'>{formatTime(msg.timestamp)}</p>
+        </div>
+      </div>
+    )
+  }
+
   // Show loading state
   if (!isConnected) {
     return (
@@ -119,6 +166,7 @@ const ChatPage = () => {
                     </p>
                     <p className='text-sm text-gray-500'>
                       {participant.id === user?.id ? 'You' : 'Online'}
+                      <span className='ml-2 w-2 h-2 bg-green-500 rounded-full inline-block'></span>
                     </p>
                   </div>
                 </li>
@@ -148,30 +196,7 @@ const ChatPage = () => {
                   No messages yet. Start the conversation!
                 </p>
               ) : (
-                messages.map((msg) => (
-                  <div
-                    key={msg.id}
-                    className={`flex ${
-                      msg.userId === user?.id ? 'justify-end' : 'justify-start'
-                    }`}
-                  >
-                    <div
-                      className={`max-w-[70%] rounded-lg p-3 ${
-                        msg.userId === user?.id
-                          ? 'bg-rose-500 text-white'
-                          : 'bg-gray-200 text-gray-800'
-                      }`}
-                    >
-                      <p className='text-sm opacity-75 mb-1'>
-                        {msg.userId === user?.id ? 'You' : msg.userName}
-                      </p>
-                      <p className='break-words'>{msg.text}</p>
-                      <p className='text-xs opacity-75 mt-1'>
-                        {formatTime(msg.timestamp)}
-                      </p>
-                    </div>
-                  </div>
-                ))
+                messages.map((msg) => renderMessage(msg))
               )}
               <div ref={messagesEndRef} />
             </div>
