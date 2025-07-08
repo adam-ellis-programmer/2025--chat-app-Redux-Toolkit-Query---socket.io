@@ -16,6 +16,7 @@ const userSchema = new mongoose.Schema(
         'Username can only contain letters, numbers, and underscores',
       ],
     },
+
     email: {
       type: String,
       required: [true, 'Email is required'],
@@ -62,11 +63,13 @@ const userSchema = new mongoose.Schema(
         type: String,
         trim: true,
         maxlength: [50, 'First name cannot exceed 50 characters'],
+        default: null,
       },
       lastName: {
         type: String,
         trim: true,
         maxlength: [50, 'Last name cannot exceed 50 characters'],
+        default: null,
       },
       avatar: {
         type: String,
@@ -75,6 +78,7 @@ const userSchema = new mongoose.Schema(
       bio: {
         type: String,
         maxlength: [500, 'Bio cannot exceed 500 characters'],
+        default: null,
       },
     },
     lastLogin: {
