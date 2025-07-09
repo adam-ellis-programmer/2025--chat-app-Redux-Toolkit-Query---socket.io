@@ -3,6 +3,9 @@ import passport from 'passport'
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20'
 import User from '../models/User.js'
 
+import mongoose from 'mongoose'
+
+
 // Export a function that configures passport when called
 export const configurePassport = () => {
   console.log('🔧 Configuring Passport...')
@@ -67,6 +70,8 @@ export const configurePassport = () => {
   )
 
   // Serialize user for session (required by Passport)
+
+  
   passport.serializeUser((user, done) => {
     done(null, user._id)
   })

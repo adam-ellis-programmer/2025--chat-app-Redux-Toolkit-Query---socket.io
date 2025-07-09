@@ -29,10 +29,12 @@ export const SocketProvider = ({ children }) => {
 
   // Get user from Redux store - corrected path
   const user = useSelector((state) => state.auth.userInfo)
+  console.log('USER----__-------->',user.id)
 
   useEffect(() => {
     console.log('🔍 SocketContext useEffect triggered')
     console.log('👤 User from Redux:', user)
+    // console.log('👤 User object keys:', user ? Object.keys(user) : 'no user') // Add this line
 
     // Only initialize socket if user is authenticated
     if (!user) {

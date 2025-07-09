@@ -1,5 +1,7 @@
 // socketHandler.js
 import { Server } from 'socket.io'
+import jwt from 'jsonwebtoken'
+import cookie from 'cookie'
 
 let io
 
@@ -16,7 +18,57 @@ const initializeSocket = (server) => {
     allowEIO3: true,
   })
 
+  // 🔒 ADD AUTHENTICATION MIDDLEWARE HERE
+  io.use((socket, next) => {
+    try {
+      console.log('🔍 Checking socket authentication...')
+
+      // Method 1: Check JWT token from cookies
+      const cookies = socket.handshake.headers.cookie
+      console.log('cookies---->', cookies)
+      let token = null
+
+      if (cookies) {
+        const parsedCookies = cookie.parse(cookies)
+        token = parsedCookies.token
+      }
+
+      if (!token) {
+        console.log('❌ No JWT token found in cookies')
+        return next(new Error('No authentication token'))
+      }
+
+      // Verify JWT token
+      const decoded = jwt.verify(token, process.env.JWT_SECRET)
+      console.log('✅ JWT verified for user:', decoded.id)
+
+      // Get auth data from handshake
+      const { userId, userName } = socket.handshake.auth
+      // console.log('HANDSHAKE-OBJ----->', socket.handshake)
+
+      // Verify the auth userId matches the JWT user
+      if (decoded.id !== userId) {
+        console.log('❌ User ID mismatch:', decoded.id, 'vs', userId)
+        return next(new Error('User ID mismatch'))
+      }
+
+      // Attach verified user info to socket
+      socket.userId = decoded.id
+      socket.userName = userName
+      socket.isAuthenticated = true
+
+      console.log(
+        `✅ Socket authenticated for user: ${userName} (${decoded.id})`
+      )
+      next() // Allow connection
+    } catch (error) {
+      console.error('❌ Socket authentication failed:', error.message)
+      next(new Error('Authentication failed'))
+    }
+  })
+  // ====================================
   // Store active rooms and users
+  // ====================================
   const activeRooms = new Map()
   const userRooms = new Map()
 
@@ -32,13 +84,27 @@ const initializeSocket = (server) => {
     }
   }
 
+  // The socket parameter is YOUR direct line to communicate with that specific user
+  // socket is the built in socket.IO Event
+  // connection is the event NAME
+  // io is the socket INSTANCE
   io.on('connection', (socket) => {
-    console.log('🔌 socket connection established')
-    console.log('✅ User connected:', socket.id)
+    console.log('I0.ON ---- SOCKET-LOG--->', socket)
+    console.log('🔌 Authenticated socket connection established')
+    console.log(
+      `✅ User ${socket.userName} (${socket.userId}) connected with socket: ${socket.id}`
+    )
 
     // Handle room creation
     socket.on('create-room', ({ roomName, userId, userName }) => {
+      // console.log('SOCKET-LOG--->', socket)
       console.log(`📝 Creating room: ${roomName} by ${userName}`)
+
+      // 🔒 Verify the user is who they claim to be
+      if (socket.userId !== userId) {
+        socket.emit('error', { message: 'Unauthorized: User ID mismatch' })
+        return
+      }
 
       if (activeRooms.has(roomName)) {
         socket.emit('room-exists', { message: 'Room already exists' })
@@ -74,6 +140,12 @@ const initializeSocket = (server) => {
     // Handle joining a room
     socket.on('join-room', ({ roomName, userId, userName }) => {
       console.log(`🚪 ${userName} trying to join room: ${roomName}`)
+
+      // 🔒 Verify the user is who they claim to be
+      if (socket.userId !== userId) {
+        socket.emit('error', { message: 'Unauthorized: User ID mismatch' })
+        return
+      }
 
       const room = activeRooms.get(roomName)
 
@@ -111,6 +183,7 @@ const initializeSocket = (server) => {
           `${userName} joined the room`,
           roomName
         )
+
         room.messages.push(joinMessage)
 
         // Send join message to all users in the room (including the one who just joined)
@@ -130,6 +203,12 @@ const initializeSocket = (server) => {
     // Handle sending messages
     socket.on('send-message', ({ roomName, message, userId, userName }) => {
       console.log(`💬 Message from ${userName} in ${roomName}: ${message}`)
+
+      // 🔒 Verify the user is who they claim to be
+      if (socket.userId !== userId) {
+        socket.emit('error', { message: 'Unauthorized: User ID mismatch' })
+        return
+      }
 
       const room = activeRooms.get(roomName)
 
@@ -157,6 +236,12 @@ const initializeSocket = (server) => {
     // Handle leaving room
     socket.on('leave-room', ({ roomName, userId }) => {
       console.log(`🚪 User ${userId} leaving room ${roomName}`)
+
+      // 🔒 Verify the user is who they claim to be
+      if (socket.userId !== userId) {
+        socket.emit('error', { message: 'Unauthorized: User ID mismatch' })
+        return
+      }
 
       const room = activeRooms.get(roomName)
 

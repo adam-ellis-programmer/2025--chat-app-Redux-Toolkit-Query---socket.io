@@ -152,9 +152,9 @@ const ChatPage = () => {
                 Loading participants...
               </li>
             ) : (
-              participants.map((participant) => (
+              participants.map((participant, i) => (
                 <li
-                  key={participant.id}
+                  key={i}
                   className='flex items-center space-x-3 p-2 rounded hover:bg-gray-100'
                 >
                   <div className='w-10 h-10 bg-rose-500 rounded-full flex items-center justify-center text-white font-bold'>

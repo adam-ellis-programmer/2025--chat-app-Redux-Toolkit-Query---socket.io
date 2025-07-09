@@ -19,7 +19,14 @@ const AuthChecker2 = ({ children }) => {
           const data = await response.json()
           if (data.success && data.user) {
             // User is authenticated, update Redux store
-            dispatch(setCredentials(data.user))
+
+            // added id so we can check auth in server socket handler
+            const updatedUser = {
+              ...data.user,
+              id: data.user._id,
+            }
+
+            dispatch(setCredentials(updatedUser))
           } else {
             // No user found, mark auth check as complete / No JWT cookie sent / JWT cookie is expired/invalid
             dispatch(setAuthCheckComplete())
