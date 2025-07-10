@@ -5,6 +5,13 @@ import cookie from 'cookie'
 
 let io
 
+// socket.on('event-name', (data) => {
+//│      │    │             │
+//│      │    │             └── Data sent from frontend
+//│      │    └── Event name (custom or built-in)
+//│      └── Listen for events
+//└── THIS specific user's socket
+
 const initializeSocket = (server) => {
   console.log('🔧 Initializing Socket.IO...')
 
@@ -18,7 +25,9 @@ const initializeSocket = (server) => {
     allowEIO3: true,
   })
 
+  // ====================================
   // 🔒 ADD AUTHENTICATION MIDDLEWARE HERE
+  // ====================================
   io.use((socket, next) => {
     try {
       console.log('🔍 Checking socket authentication...')
@@ -66,9 +75,9 @@ const initializeSocket = (server) => {
       next(new Error('Authentication failed'))
     }
   })
-  // ====================================
+  // =======================================
   // Store active rooms and users
-  // ====================================
+  // =======================================
   const activeRooms = new Map()
   const userRooms = new Map()
 
@@ -84,6 +93,10 @@ const initializeSocket = (server) => {
     }
   }
 
+  // ====================================
+  // create the connection gateway wrapper
+  // ====================================
+  // It's the gateway where authenticated users enter your chat system and get their individual communication channels set up! 🚀
   // The socket parameter is YOUR direct line to communicate with that specific user
   // socket is the built in socket.IO Event
   // connection is the event NAME
@@ -94,8 +107,11 @@ const initializeSocket = (server) => {
     console.log(
       `✅ User ${socket.userName} (${socket.userId}) connected with socket: ${socket.id}`
     )
-
+    //  Set up event listeners for THIS specific socket
+    // ====================================
     // Handle room creation
+    // ====================================
+    // create room EVENT LISTENER
     socket.on('create-room', ({ roomName, userId, userName }) => {
       // console.log('SOCKET-LOG--->', socket)
       console.log(`📝 Creating room: ${roomName} by ${userName}`)
@@ -136,8 +152,9 @@ const initializeSocket = (server) => {
       io.emit('rooms-updated', Array.from(activeRooms.values()))
       console.log(`✅ Room ${roomName} created successfully`)
     })
-
+    // ====================================
     // Handle joining a room
+    // ====================================
     socket.on('join-room', ({ roomName, userId, userName }) => {
       console.log(`🚪 ${userName} trying to join room: ${roomName}`)
 
@@ -189,6 +206,7 @@ const initializeSocket = (server) => {
         // Send join message to all users in the room (including the one who just joined)
         io.to(roomName).emit('new-message', joinMessage)
 
+        // WHY USE SOCKET.TO AND IO.TO ABOVE
         // Notify other users in the room about the new participant
         socket
           .to(roomName)
@@ -199,8 +217,9 @@ const initializeSocket = (server) => {
       io.emit('rooms-updated', Array.from(activeRooms.values()))
       console.log(`✅ ${userName} joined room ${roomName}`)
     })
-
+    // ====================================
     // Handle sending messages
+    // ====================================
     socket.on('send-message', ({ roomName, message, userId, userName }) => {
       console.log(`💬 Message from ${userName} in ${roomName}: ${message}`)
 
@@ -232,8 +251,9 @@ const initializeSocket = (server) => {
       io.to(roomName).emit('new-message', newMessage)
       console.log(`✅ Message sent to room ${roomName}`)
     })
-
+    // ====================================
     // Handle leaving room
+    // ====================================
     socket.on('leave-room', ({ roomName, userId }) => {
       console.log(`🚪 User ${userId} leaving room ${roomName}`)
 
@@ -279,14 +299,17 @@ const initializeSocket = (server) => {
         io.emit('rooms-updated', Array.from(activeRooms.values()))
       }
     })
-
+    // ====================================
     // Handle getting available rooms
+    // ====================================
     socket.on('get-rooms', () => {
       console.log('📋 Sending room list to client')
       socket.emit('rooms-list', Array.from(activeRooms.values()))
     })
 
+    // ====================================
     // Handle disconnect
+    // ====================================
     socket.on('disconnect', () => {
       console.log('❌ User disconnected:', socket.id)
 
@@ -336,7 +359,9 @@ const initializeSocket = (server) => {
       userRooms.delete(socket.id)
     })
 
+    // ====================================
     // Handle errors
+    // ====================================
     socket.on('error', (error) => {
       console.error('❌ Socket error:', error)
     })
