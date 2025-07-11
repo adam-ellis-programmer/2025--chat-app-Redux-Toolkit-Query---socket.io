@@ -11,14 +11,29 @@ import { io } from 'socket.io-client'
 
 const SocketContext = createContext()
 
+// The useSocket hook is like a radio receiver. It:
+
+// "Tunes into" the SocketContext frequency with useContext(SocketContext)
+// Receives the entire value object that was broadcast
+// Returns that entire object
+
+// Step 3: The Hook Receives the Broadcast
+// This hook reduces boiler plate code across the app
+//  classic DRY principle (Don't Repeat Yourself) 
 export const useSocket = () => {
-  const context = useContext(SocketContext)
+  const context = useContext(SocketContext) // ← "Tune into the radio frequency"
   if (!context) {
     throw new Error('useSocket must be used within a SocketProvider')
   }
-  return context
+  return context // ← Return the entire broadcast (the 'value' object)
 }
 
+// The SocketProvider is like the radio tower. It:
+// Creates all the state variables and functions
+// Packages them into the value object
+// Broadcasts this value object through SocketContext.Provider
+
+// SocketProvider imported and used in main.js
 export const SocketProvider = ({ children }) => {
   const [socket, setSocket] = useState(null)
   const [currentRoom, setCurrentRoom] = useState(null)
@@ -29,7 +44,7 @@ export const SocketProvider = ({ children }) => {
 
   // Get user from Redux store - corrected path
   const user = useSelector((state) => state.auth.userInfo)
-  console.log('USER----__-------->',user.id)
+  console.log('USER------------>', user.id)
 
   useEffect(() => {
     console.log('🔍 SocketContext useEffect triggered')
@@ -153,6 +168,7 @@ export const SocketProvider = ({ children }) => {
     })
     if (socket && isConnected) {
       console.log('📤 Emitting create-room event')
+      // sends
       socket.emit('create-room', { roomName, userId, userName })
     } else {
       console.error('❌ Cannot create room: socket not connected', {
@@ -256,6 +272,7 @@ export const SocketProvider = ({ children }) => {
     getRooms,
   }
 
+  // // BROADCAST this data to all children components
   return (
     <SocketContext.Provider value={value}>{children}</SocketContext.Provider>
   )

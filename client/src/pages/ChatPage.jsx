@@ -22,12 +22,27 @@ const ChatPage = () => {
     joinRoom,
     isConnected,
   } = useSocket()
+  // Replace the useEffect in ChatPage.jsx with this smarter version:
 
   useEffect(() => {
-    // If we have a room name from URL params and user, try to join
+    // Only try to join if:
+    // 1. We have a room name from URL
+    // 2. User is authenticated
+    // 3. Socket is connected
+    // 4. We don't have a current room
+    // 5. The room name in URL matches what we expect (not just left)
     if (roomName && user?.id && isConnected && !currentRoom) {
-      // Use correct user fields: id, username, email
-      joinRoom(roomName, user.id, user.username || user.email)
+      console.log('🔍 Attempting to join room from URL:', roomName)
+
+      // Small delay to prevent race condition with leave
+      const timeoutId = setTimeout(() => {
+        // Double-check we still don't have a current room
+        if (!currentRoom) {
+          joinRoom(roomName, user.id, user.username || user.email)
+        }
+      }, 100)
+
+      return () => clearTimeout(timeoutId)
     }
   }, [roomName, user, currentRoom, joinRoom, isConnected])
 
@@ -46,9 +61,14 @@ const ChatPage = () => {
   }
 
   const handleLeaveRoom = () => {
+    console.log('🚪 handleLeaveRoom called')
+    // console.log('🚪 leaveRoom function called with userId:', userId)
+    console.log('🚪 Current room:', currentRoom?.name)
     if (user) {
+      console.log('🚪 About to call leaveRoom with user:', user.id)
       leaveRoom(user.id)
-      navigate('/chat/create') // Navigate back to create page
+      console.log('🚪 About to navigate to /chat/create')
+      navigate('/chat/create')
     }
   }
 

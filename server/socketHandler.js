@@ -127,6 +127,7 @@ const initializeSocket = (server) => {
         return
       }
 
+      // sets up the room with exactly one user
       const room = {
         id: roomName,
         name: roomName,
@@ -146,12 +147,26 @@ const initializeSocket = (server) => {
       userRooms.set(socket.id, roomName)
 
       socket.join(roomName)
+      // socket.join
+      // Now when server does this:
+      // Getting a room key - user can now "enter" the room
+      // io.to('MyRoom').emit('new-message', messageData)
+      // ↑ This socket will receive the message!
+      // Without socket.join(), the user would be "locked out" of room messages
+
       socket.emit('room-created', room)
 
+      // Triggered by server when ANY user creates/joins/leaves room
       // Broadcast updated room list to all users
+      // Don't request this - it just happens
+      // Real-time synchronization
+      // Used to update rooms avalable in createChat page
       io.emit('rooms-updated', Array.from(activeRooms.values()))
+
       console.log(`✅ Room ${roomName} created successfully`)
+      console.log('user rooms--->.', userRooms)
     })
+
     // ====================================
     // Handle joining a room
     // ====================================
@@ -302,6 +317,9 @@ const initializeSocket = (server) => {
     // ====================================
     // Handle getting available rooms
     // ====================================
+    // get-rooms is used in ONE main scenario:  When the CreateChatPage loads for the first time
+    // get-rooms = "Hey server, what rooms exist right now?" (INITIAL LOAD)
+    // rooms-updated = "Hey everyone, the room list just changed!" (REAL-TIME UPDATES)
     socket.on('get-rooms', () => {
       console.log('📋 Sending room list to client')
       socket.emit('rooms-list', Array.from(activeRooms.values()))

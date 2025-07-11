@@ -12,7 +12,7 @@ import {
   HomeLayout,
   HomePage,
   ChatLayout,
-  ChatPage, 
+  ChatPage,
   UserDash,
 } from './pages/index.js'
 import CreateChatPage from './pages/CreateChatPage.jsx'

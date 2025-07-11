@@ -5,6 +5,21 @@ import { useSelector } from 'react-redux'
 import { useSocket } from '../context/SocketContext'
 import LogoutBtn from '../components/Auth Buttons/LogoutBtn'
 
+// // In CreateChatPage.jsx
+// import { useContext } from 'react'
+// import { SocketContext } from '../context/SocketContext'
+
+// WITH OUT THE HOOK WE WOULD WRITE THIS
+// const CreateChatPage = () => {
+// const context = useContext(SocketContext)
+// if (!context) {
+// throw new Error('useSocket must be used within a SocketProvider')
+// }
+// const { availableRooms, createRoom, joinRoom, getRooms, isConnected } = context
+
+// ... rest of component
+// }
+
 const CreateChatPage = () => {
   const [roomName, setRoomName] = useState('')
   const navigate = useNavigate()
@@ -21,7 +36,7 @@ const CreateChatPage = () => {
     if (isConnected) {
       getRooms()
     }
-  }, [isConnected]) // Remove getRooms from dependencies to prevent infinite loop
+  }, [isConnected])
 
   const handleCreateRoom = (e) => {
     e.preventDefault()
